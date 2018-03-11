@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PlantsCam.iml" filepath="$PROJECT_DIR$/PlantsCam.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cameraview/library/lib-cameraview.iml" filepath="$PROJECT_DIR$/cameraview/library/lib-cameraview.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib-util/lib-util.iml" filepath="$PROJECT_DIR$/lib-util/lib-util.iml" />
     </modules>
   </component>
 </project>

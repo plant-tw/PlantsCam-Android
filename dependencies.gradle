@@ -1,0 +1,82 @@
+ext {
+    compileSdkVersion = 26
+    buildToolsVersion = '26.0.2'
+    minSdkVersion = 16
+    targetSdkVersion = 26
+    sourceCompatibilityVersion = JavaVersion.VERSION_1_7
+    targetCompatibilityVersion = JavaVersion.VERSION_1_7
+
+    supportLibraryVersion = '26.1.0'
+    SUPPORT_LIB_VER = '26.1.0'
+    PLAY_SERVICES_VER = '11.8.0'
+    KOTLIN_VER = '1.1.61'
+    FIREBASE_VER = '11.8.0'
+    RX_BINDING_VER = '2.0.0'
+    DAGGER2_VER = '2.11-rc2'
+    BOLTS_VER = '1.4.0'
+    RETROFIT_VER = "2.1.0"
+    OKHTTP_VER = '3.0.1'
+    BUTTER_KNIFE_VER = '8.5.1'
+
+    dep = [
+        // Google Support Library.
+        supportV4              : "com.android.support:support-v4:$SUPPORT_LIB_VER",
+        supportV4CoreUtils     : "com.android.support:support-core-utils:$SUPPORT_LIB_VER",
+        supportV13             : "com.android.support:support-v13:$SUPPORT_LIB_VER",
+        supportCompat          : "com.android.support:support-compat:$SUPPORT_LIB_VER",
+        supportAppcompatV7     : "com.android.support:appcompat-v7:$SUPPORT_LIB_VER",
+        supportExif            : "com.android.support:exifinterface:$SUPPORT_LIB_VER",
+        supportRecyclerViewV7  : "com.android.support:recyclerview-v7:${SUPPORT_LIB_VER}",
+        supportCardViewV7      : "com.android.support:cardview-v7:${SUPPORT_LIB_VER}",
+        supportGridLayoutV7    : "com.android.support:gridlayout-v7:${SUPPORT_LIB_VER}",
+        supportPalette         : "com.android.support:palette-v7:${SUPPORT_LIB_VER}",
+
+        supportAnnotations     : "com.android.support:support-annotations:$SUPPORT_LIB_VER",
+        supportDesign          : "com.android.support:design:${SUPPORT_LIB_VER}",
+        supportVectorDrawable  : "com.android.support:support-vector-drawable:${SUPPORT_LIB_VER}",
+        supportPercent         : "com.android.support:percent:${SUPPORT_LIB_VER}",
+        supportTransition      : "com.android.support:transition:${SUPPORT_LIB_VER}",
+        supportConstraintLayout: "com.android.support.constraint:constraint-layout:1.0.2",
+        supportMultidex        : 'com.android.support:multidex:1.0.1',
+        // Google Play Service.
+        playServicesAds        : "com.google.android.gms:play-services-ads:${PLAY_SERVICES_VER}",
+        playServicesAnalytics  : "com.google.android.gms:play-services-analytics:${PLAY_SERVICES_VER}",
+        playServicesVision     : "com.google.android.gms:play-services-vision:${PLAY_SERVICES_VER}",
+        playServicesGcm        : "com.google.android.gms:play-services-gcm:${PLAY_SERVICES_VER}",
+        // Google Firebase.
+        firebaseCore           : "com.google.firebase:firebase-core:${FIREBASE_VER}",
+        firebaseAnalytics      : "com.google.firebase:firebase-analytics:${FIREBASE_VER}",
+        firebaseAuth           : "com.google.firebase:firebase-auth:${FIREBASE_VER}",
+        firebaseConfig         : "com.google.firebase:firebase-config:${FIREBASE_VER}",
+        firebaseCrash          : "com.google.firebase:firebase-crash:${FIREBASE_VER}",
+        firebaseMessaging      : "com.google.firebase:firebase-messaging:${FIREBASE_VER}",
+        firebaseInvites        : "com.google.firebase:firebase-invites:${FIREBASE_VER}",
+        firebasePerf           : "com.google.firebase:firebase-perf:${FIREBASE_VER}",
+
+        // RxJava.
+        rxKotlin               : 'io.reactivex.rxjava2:rxkotlin:2.1.0',
+        rxJava                 : 'io.reactivex.rxjava2:rxjava:2.1.0',
+        rxAndroid              : 'io.reactivex.rxjava2:rxandroid:2.0.1',
+        rxRelay                : 'com.jakewharton.rxrelay2:rxrelay:2.0.0',
+        rxBinding              : "com.jakewharton.rxbinding2:rxbinding:${RX_BINDING_VER}",
+        rxBindingCompat        : "com.jakewharton.rxbinding2:rxbinding-appcompat-v7:${RX_BINDING_VER}",
+        rxBindingRecyclerViewV7: "com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:${RX_BINDING_VER}",
+        rxPermissions          : 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar',
+
+        // JSON.
+        gson                   : "com.google.code.gson:gson:2.7",
+        // ASYNC.
+        bolts                  : "com.parse.bolts:bolts-tasks:$BOLTS_VER",
+
+        // TESTING.
+        testJunit              : 'junit:junit:4.12',
+        testGoogleTruth        : 'com.google.truth:truth:0.34',
+        testMockito            : 'org.mockito:mockito-core:2.15.+',
+        testMockitoAndroid     : 'org.mockito:mockito-android:2.15.+',
+        testRobolectric        : 'org.robolectric:robolectric:3.7.1',
+        testRobolectricMultidex: 'org.robolectric:shadows-multidex:3.3.2',
+        testEspressoCore       : 'com.android.support.test.espresso:espresso-core:3.0.1',
+        testRunner             : 'com.android.support.test:runner:1.0.1',
+        testFindBugs           : 'com.google.code.findbugs:jsr305:3.0.1'
+    ]
+}

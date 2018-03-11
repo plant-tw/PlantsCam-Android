@@ -1,0 +1,69 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    useLibrary 'org.apache.http.legacy'
+
+    def BOOL = "boolean"
+    def STR = "String"
+    def TRUE = "true"
+    def FALSE = "false"
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        buildConfigField BOOL, "IN_APP_PURCHASE_ENABLE", TRUE
+        buildConfigField BOOL, "RATING_ENABLE", TRUE
+        buildConfigField BOOL, "NOTIFICATION_SERVICE_ENABLE", TRUE
+        buildConfigField BOOL, "FREE_DOWNLOAD_PAID_BUNDLE_ENABLE", FALSE
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Google Support Library.
+    implementation rootProject.ext.dep.supportAppcompatV7
+
+    // RxJava
+    implementation rootProject.ext.dep.rxJava
+    implementation rootProject.ext.dep.rxAndroid
+    // Bolts
+    implementation rootProject.ext.dep.bolts
+
+    implementation 'org.twitter4j:twitter4j-core:4.0.4'
+
+    implementation rootProject.ext.dep.firebaseCore
+
+    // JSON
+    implementation rootProject.ext.dep.gson
+
+    implementation ('org.apache.httpcomponents:httpmime:4.1') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+
+    // Unit testing dependencies
+    testImplementation rootProject.ext.dep.testJunit
+    testImplementation rootProject.ext.dep.testMockito
+    testImplementation rootProject.ext.dep.testRobolectric
+    testImplementation 'org.assertj:assertj-core:3.6.1'
+
+    // Testing
+    testImplementation rootProject.ext.dep.gson
+
+    // Instrumentation tests.
+    androidTestImplementation rootProject.ext.dep.testEspressoCore
+}
