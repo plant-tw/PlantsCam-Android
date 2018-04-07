@@ -1,7 +1,7 @@
 package plantscam.android.prada.lab.plantscamera;
 
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
@@ -28,12 +28,11 @@ import java.util.PriorityQueue;
 
 public class PlantsClassifier {
 
-
     /** Tag for the {@link Log}. */
     private static final String TAG = "TfLiteCameraDemo";
 
     /** Name of the model file stored in Assets. */
-    private static final String MODEL_PATH = "plant.pb";
+    private static final String MODEL_PATH = "plant.tflite";
 //    private static final String MODEL_PATH = "mobilenet_quant_v1_224.tflite";
 
 //    /** Name of the label file stored in Assets. */
@@ -84,7 +83,7 @@ public class PlantsClassifier {
             });
 
     /** Initializes an {@code ImageClassifier}. */
-    PlantsClassifier(Activity activity) throws IOException {
+    PlantsClassifier(Context activity) throws IOException {
         tflite = new Interpreter(loadModelFile(activity));
         labelList = loadLabelList(activity);
         imgData =
@@ -147,7 +146,7 @@ public class PlantsClassifier {
     }
 
     /** Reads label list from Assets. */
-    private List<String> loadLabelList(Activity activity) throws IOException {
+    private List<String> loadLabelList(Context activity) throws IOException {
         List<String> labelList = new ArrayList<>();
         for (int i = 0; i < 1001; i++) {
             labelList.add(String.valueOf(i));
@@ -163,7 +162,7 @@ public class PlantsClassifier {
     }
 
     /** Memory-map the model file in Assets. */
-    private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
+    private MappedByteBuffer loadModelFile(Context activity) throws IOException {
         AssetFileDescriptor fileDescriptor = activity.getAssets().openFd(MODEL_PATH);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();

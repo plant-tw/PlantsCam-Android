@@ -22,7 +22,7 @@ android {
         }
     }
     aaptOptions {
-        noCompress "tflite"
+        noCompress "tflite", "pb"
     }
 }
 
@@ -38,6 +38,7 @@ dependencies {
     implementation rootProject.ext.dep.supportAppcompatV7
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'org.tensorflow:tensorflow-lite:+'
+    implementation 'org.tensorflow:tensorflow-android:1.2.0'
 
     implementation 'com.google.dagger:dagger:2.14.1'
     implementation 'com.google.dagger:dagger-android:2.14.1'
