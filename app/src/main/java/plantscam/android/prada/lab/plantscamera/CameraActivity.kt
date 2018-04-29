@@ -30,8 +30,8 @@ class CameraActivity : AppCompatActivity() {
             jpegData.let { data ->
                 val s1 = Observable.just(data)
                     .map {
-                        val uuid = UuidFactory(baseContext).deviceUuid.toString()
-                        val file = File(baseContext.externalCacheDir, uuid + ".jpg")
+                        val uuid = UuidFactory(this@CameraActivity).deviceUuid.toString()
+                        val file = File(externalCacheDir, uuid + ".jpg")
                         FileUtils.write(file, it)
                         file
                     }
@@ -86,7 +86,6 @@ class CameraActivity : AppCompatActivity() {
                         Toast.makeText(baseContext, "permission denied!!", Toast.LENGTH_LONG).show()
                     }
                 })
-
         }
     }
 

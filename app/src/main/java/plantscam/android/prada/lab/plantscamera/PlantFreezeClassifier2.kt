@@ -14,45 +14,42 @@ import org.tensorflow.contrib.android.TensorFlowInferenceInterface
 class PlantFreezeClassifier2(mgr: AssetManager) {
 
     private val tensorflow: TensorFlowInferenceInterface = TensorFlowInferenceInterface(mgr, "file:///android_asset/frozen_graph.pb")
-    // private String[] mOutputNames = new String[] {"sum"};
-    private val mPlantOutputNames = arrayOf("resnet_v2_50/predictions/Reshape_1:0")
-    private val mOutputs = FloatArray(OUTPUT_NUM)
     private val mPlantOutputs = FloatArray(OUTPUT_NUM)
-    private val mInputSize = Rect(0, 0, INPUT_W, INPUT_H)
 
     fun run(pixels: FloatArray): Int {
-        tensorflow.feed("input:0", pixels, 1L, mInputSize.width().toLong(), mInputSize.height().toLong(), 3L)
-        tensorflow.run(mPlantOutputNames)
-        tensorflow.fetch(mPlantOutputNames[0], mPlantOutputs)
+        tensorflow.feed(INPUT_NAME, pixels, 1L, INPUT_W.toLong(), INPUT_H.toLong(), 3L)
+        tensorflow.run(OUTPUT_NAMES)
+        tensorflow.fetch(OUTPUT_NAMES[0], mPlantOutputs)
 
         var idx = 0
-        var max = mOutputs[0]
-        for (i in 1 until mOutputs.size) {
-            Log.d("TF DEMO", "output = " + mOutputs[i])
-            if (mOutputs[i] < max) {
+        var max = mPlantOutputs[0]
+        for (i in 1 until mPlantOutputs.size) {
+            Log.d("TF DEMO", "output = " + mPlantOutputs[i])
+            if (mPlantOutputs[i] > max) {
                 idx = i
-                max = mOutputs[i]
+                max = mPlantOutputs[i]
             }
         }
         return idx
     }
 
-
     companion object {
 
         const val INPUT_W = 224
         const val INPUT_H = 224
-        const val OUTPUT_NUM = 10
+        const val OUTPUT_NUM = 11
 
         const val R_MEAN = 123.68
         const val G_MEAN = 116.78
         const val B_MEAN = 103.94
 
+        private val OUTPUT_NAMES = arrayOf("resnet_v2_50/predictions/Reshape_1:0")
+        private val INPUT_NAME = "input:0"
+
         private val buffer = IntArray(INPUT_W * INPUT_H)
         private val pixelBuffer = FloatArray(INPUT_W * INPUT_H * 3)
 
         fun convertTo(bm: Bitmap): FloatArray {
-            // bitmap pixel to float[]
             bm.getPixels(buffer, 0, INPUT_W, 0, 0, INPUT_W, INPUT_H)
             for (i in 0 until buffer.size) {
                 // Set 0 for white and 255 for black pixel
