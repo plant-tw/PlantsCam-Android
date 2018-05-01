@@ -16,6 +16,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import plantscam.android.prada.lab.imageutils.ImageUtils
 import java.io.File
+import plantscam.android.prada.lab.plantscamera.ml.PlantFreezeClassifier2
 
 /**
  * Created by prada on 30/04/2018.

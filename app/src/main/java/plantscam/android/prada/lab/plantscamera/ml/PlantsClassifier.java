@@ -1,4 +1,4 @@
-package plantscam.android.prada.lab.plantscamera;
+package plantscam.android.prada.lab.plantscamera.ml;
 
 
 import android.content.Context;

@@ -1,17 +1,15 @@
 package plantscam.android.prada.lab.plantscamera
 
-import android.Manifest.permission.CAMERA
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import plantscam.android.prada.lab.plantscamera.ml.PlantFreezeClassifier2
 
 
 class MainActivity : AppCompatActivity() {

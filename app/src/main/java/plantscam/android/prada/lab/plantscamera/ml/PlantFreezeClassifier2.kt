@@ -1,9 +1,8 @@
-package plantscam.android.prada.lab.plantscamera
+package plantscam.android.prada.lab.plantscamera.ml
 
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Rect
 import android.util.Log
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface
 
