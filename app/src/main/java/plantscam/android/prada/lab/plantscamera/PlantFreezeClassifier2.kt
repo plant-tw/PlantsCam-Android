@@ -51,9 +51,15 @@ class PlantFreezeClassifier2(mgr: AssetManager) {
 
         fun convertTo(bm: Bitmap): FloatArray {
             bm.getPixels(buffer, 0, INPUT_W, 0, 0, INPUT_W, INPUT_H)
-            for (i in 0 until buffer.size) {
-                // Set 0 for white and 255 for black pixel
-                val pix = buffer[i]
+            return convertTo(buffer)
+        }
+
+        fun convertTo(buff: IntArray): FloatArray {
+            if (buff.size != INPUT_W * INPUT_H) {
+                throw IllegalArgumentException("input buffer size isn't the same as the expected size for Tensorflow")
+            }
+            for (i in 0 until buff.size) {
+                val pix = buff[i]
                 pixelBuffer[3 * i] = (Color.red(pix) - R_MEAN).toFloat()
                 pixelBuffer[3 * i + 1] = (Color.green(pix) - G_MEAN).toFloat()
                 pixelBuffer[3 * i + 2] = (Color.blue(pix) - B_MEAN).toFloat()

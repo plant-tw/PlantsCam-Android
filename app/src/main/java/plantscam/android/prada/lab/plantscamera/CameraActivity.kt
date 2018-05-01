@@ -15,14 +15,14 @@ import kotlinx.android.synthetic.main.activity_camera.*
 
 class CameraActivity : AppCompatActivity() {
 
-    lateinit var cameraViewModel : CameraViewModel
-    val cameraBuffSignal: Subject<ByteArray> = BehaviorSubject.create()
+    private lateinit var cameraViewModel : CameraViewModel
+    val cameraBuffSignal: Subject<CameraPreviewData> = BehaviorSubject.create()
     val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
 
     private val disposeBag = CompositeDisposable()
     private val cameraCallback = object: CameraView.Callback() {
         override fun onPreviewFrame(cameraView: CameraView?, data: ByteArray?, width: Int, height: Int, format: Int) {
-            data?.let { cameraBuffSignal.onNext(it) }
+            data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, width, height)) }
         }
         override fun onPictureTaken(cameraView: CameraView?, jpegData: ByteArray?) {
             jpegData?.let { takePhotoSignal.onNext(it) }
@@ -69,4 +69,10 @@ class CameraActivity : AppCompatActivity() {
         cameraViewModel.unbindIntents()
         disposeBag.clear()
     }
+
+    data class CameraPreviewData(
+        val previewData: ByteArray,
+        val width: Int,
+        val height: Int
+    )
 }

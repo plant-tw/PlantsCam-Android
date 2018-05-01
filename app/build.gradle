@@ -45,10 +45,10 @@ dependencies {
     implementation 'com.google.dagger:dagger-android-support:2.14.1'
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.14.1'
     kapt 'com.google.dagger:dagger-compiler:2.10'
-//    compile 'com.google.dagger:dagger:2.14.1'
-//    apt 'com.google.dagger:dagger-compiler:2.14.1'
+
     implementation project(':lib-cameraview')
     implementation project(':lib-util')
+    implementation project(':lib-image-utils')
 
     implementation rootProject.ext.dep.rxJava
     implementation rootProject.ext.dep.rxAndroid

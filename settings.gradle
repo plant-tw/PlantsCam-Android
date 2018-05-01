@@ -1,2 +1,2 @@
-include ':app', ':lib-cameraview', ':lib-util'
+include ':app', ':lib-cameraview', ':lib-util', ':lib-image-utils'
 project(':lib-cameraview').projectDir = new File('cameraview/library')
