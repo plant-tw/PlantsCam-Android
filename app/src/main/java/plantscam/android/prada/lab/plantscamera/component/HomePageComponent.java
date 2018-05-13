@@ -3,8 +3,6 @@ package plantscam.android.prada.lab.plantscamera.component;
 import dagger.Component;
 import plantscam.android.prada.lab.plantscamera.MainActivity;
 import plantscam.android.prada.lab.plantscamera.UserScope;
-import plantscam.android.prada.lab.plantscamera.implementation.IUseCase;
-import plantscam.android.prada.lab.plantscamera.module.HomePresenterModule;
 import plantscam.android.prada.lab.plantscamera.module.UserCaseModule;
 
 /**
@@ -12,7 +10,7 @@ import plantscam.android.prada.lab.plantscamera.module.UserCaseModule;
  */
 
 @UserScope
-@Component(dependencies = AppComponent.class, modules = {UserCaseModule.class, HomePresenterModule.class})
+@Component(dependencies = AppComponent.class, modules = {UserCaseModule.class})
 public interface HomePageComponent {
     void inject(MainActivity activity);
 }
