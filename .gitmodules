@@ -1,3 +1,6 @@
 [submodule "cameraview"]
 	path = cameraview
 	url = git@github.com:google/cameraview.git
+[submodule "cwac-camera"]
+	path = cwac-camera
+	url = git@github.com:bearprada/cwac-camera.git
