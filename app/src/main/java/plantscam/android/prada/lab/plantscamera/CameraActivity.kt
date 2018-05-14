@@ -22,6 +22,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
     private lateinit var cameraViewModel : CameraViewModel
     val cameraBuffSignal: Subject<CameraPreviewData> = BehaviorSubject.create()
+    val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
     val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
     private var myHost: MyHost? = null
 
@@ -43,7 +44,8 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
         camera.setPreviewCallback { data, camera ->
             val size = camera.parameters.previewSize
-            cameraBuffSignal.onNext(CameraPreviewData(data, size.width, size.height))
+            data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, size.width, size.height)) }
+
         }
         btn_take_photo.setOnClickListener {
             val rxPermissions = RxPermissions(this)
@@ -64,7 +66,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         camera.onResume()
         camera.restartPreview()
 
-        cameraViewModel.bindIntents(cameraBuffSignal, takePhotoSignal)
+        cameraViewModel.bindIntents(cameraBuffSignal, cameraPreviewReadySignal, takePhotoSignal)
 
         disposeBag.add(cameraViewModel.render()
             .observeOn(AndroidSchedulers.mainThread())
@@ -94,7 +96,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     )
 
     // add more configuration later
-    private class MyHost(ctx: Context) : SimpleCameraHost(ctx) {
+    inner class MyHost(ctx: Context) : SimpleCameraHost(ctx) {
         var _cameraId : Int = -1
 
         override fun getCameraId(): Int {
@@ -109,6 +111,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
                                     height: Int,
                                     parameters: Camera.Parameters): Camera.Size? {
             previewSize = getOptimalPreviewSize(parameters.supportedPreviewSizes, width / 2, height / 2)
+            cameraPreviewReadySignal.onNext(previewSize)
             return previewSize
         }
 
