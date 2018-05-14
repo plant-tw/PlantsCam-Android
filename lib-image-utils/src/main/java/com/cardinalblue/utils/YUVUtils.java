@@ -8,5 +8,5 @@ public class YUVUtils {
         System.loadLibrary("yuv-to-rgb");
     }
 
-    public static native void yuv2rgb(int[] argb, byte[] yuv, int width, int height);
+    public static native void yuv2rgb(int[] rgb, byte[] yuv, int width, int height);
 }
