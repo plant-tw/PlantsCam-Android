@@ -33,7 +33,6 @@ public class MnistClassifier implements Classifier {
 
     private TensorFlowInferenceInterface tfHelper;
 
-    private String name;
     private String inputName;
     private String outputName;
     private int inputSize;
@@ -62,7 +61,7 @@ public class MnistClassifier implements Classifier {
    //given a model, its label file, and its metadata
     //fill out a classifier object with all the necessary
     //metadata including output prediction
-    public static MnistClassifier create(AssetManager assetManager,String name,
+    public static MnistClassifier create(AssetManager assetManager,
                                          String modelPath,
                                          String labelFile,
                                          int inputSize,
@@ -71,9 +70,6 @@ public class MnistClassifier implements Classifier {
                                          boolean feedKeepProb) throws IOException {
         //intialize a classifier
         MnistClassifier c = new MnistClassifier();
-
-        //store its name, input and output labels
-        c.name = name;
 
         c.inputName = inputName;
         c.outputName = outputName;
@@ -100,11 +96,6 @@ public class MnistClassifier implements Classifier {
     }
 
     @Override
-    public String name() {
-        return name;
-    }
-
-    @Override
     public Classification recognize(final float[] pixels) {
 
         //using the interface
@@ -126,16 +117,15 @@ public class MnistClassifier implements Classifier {
         //for each output prediction
         //if its above the threshold for accuracy we predefined
         //write it out to the view
-        Classification ans = new Classification();
+        float maxConf = -1f;
+        String maxLabel = "";
         for (int i = 0; i < output.length; ++i) {
-            System.out.println(output[i]);
-            System.out.println(labels.get(i));
-            if (output[i] > THRESHOLD && output[i] > ans.getConf()) {
-                ans.update(output[i], labels.get(i));
+            if (output[i] > THRESHOLD && output[i] > maxConf) {
+                maxLabel = labels.get(i);
+                maxConf = output[i];
             }
         }
-
-        return ans;
+        return new Classification(maxConf, maxLabel);
     }
 
     private static float[] cache = new float[PIXEL_WIDTH * PIXEL_WIDTH];

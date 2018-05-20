@@ -13,7 +13,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import plantscam.android.prada.lab.plantscamera.ml.Classification
 import plantscam.android.prada.lab.plantscamera.ml.Classifier
-import plantscam.android.prada.lab.plantscamera.ml.MnistClassifier
+import plantscam.android.prada.lab.plantscamera.ml.PlantFreezeClassifier2
 import plantscam.android.prada.lab.plantscamera.utils.ImageUtils
 
 /**
@@ -26,7 +26,7 @@ class CameraViewModel(private val assets: AssetManager) {
     private var buff2: IntArray? = null
 
     private var rgbBitmap: Bitmap? = null
-    private val croppedBitmap = Bitmap.createBitmap(MnistClassifier.PIXEL_WIDTH, MnistClassifier.PIXEL_WIDTH, Bitmap.Config.ARGB_8888)
+    private val croppedBitmap = Bitmap.createBitmap(TF_MODEL_INPUT_W, TF_MODEL_INPUT_H, Bitmap.Config.ARGB_8888)
     private val croppedCanvas = Canvas(croppedBitmap)
     private lateinit var frameToCropTransform : Matrix
 
@@ -38,7 +38,7 @@ class CameraViewModel(private val assets: AssetManager) {
                 rgbBitmap = Bitmap.createBitmap(it.width, it.height, Bitmap.Config.ARGB_8888)
                 frameToCropTransform = ImageUtils.getTransformationMatrix(
                         it.width, it.height,
-                        MnistClassifier.PIXEL_WIDTH, MnistClassifier.PIXEL_WIDTH,
+                        TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
                         0, false)
             })
         disposeBag.add(Observable.combineLatest(
@@ -47,8 +47,8 @@ class CameraViewModel(private val assets: AssetManager) {
                 .observeOn(Schedulers.io())
                 .filter { rgbBitmap != null }
                 .map { toRGB(it.previewData, it.width, it.height) }
-                .map { crop(it, MnistClassifier.PIXEL_WIDTH, MnistClassifier.PIXEL_WIDTH) }
-                .map { MnistClassifier.copyPixel(it)!! },
+                .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
+                .map { PlantFreezeClassifier2.copyPixel(it) },
             BiFunction<Classifier, FloatArray, Classification> { tf, data ->
                  tf.recognize(data)
             })
@@ -112,10 +112,10 @@ class CameraViewModel(private val assets: AssetManager) {
     private fun initTensorflow(assets: AssetManager): Observable<Classifier> {
         return Observable.create {
             try {
-                it.onNext(MnistClassifier.create(assets, "TensorFlow",
-                        "mnist/opt_mnist_convnet-tf.pb", "mnist/labels.txt", MnistClassifier.PIXEL_WIDTH,
-                        "input", "output", true))
-//                it.onNext(PlantFreezeClassifier2(assets))
+//                it.onNext(MnistClassifier.create(assets, "TensorFlow",
+//                        "mnist/opt_mnist_convnet-tf.pb", "mnist/labels.txt", MnistClassifier.PIXEL_WIDTH,
+//                        "input", "output", true))
+                it.onNext(PlantFreezeClassifier2(assets))
             } catch (e: Throwable) {
                 it.onError(e)
             }
@@ -148,5 +148,13 @@ class CameraViewModel(private val assets: AssetManager) {
             buff2 = IntArray(width * height)
         }
         return buff2!!
+    }
+
+    companion object {
+
+//        const val TF_MODEL_INPUT_W = MnistClassifier.PIXEL_WIDTH
+//        const val TF_MODEL_INPUT_H = MnistClassifier.PIXEL_WIDTH
+        const val TF_MODEL_INPUT_W = PlantFreezeClassifier2.INPUT_W
+        const val TF_MODEL_INPUT_H = PlantFreezeClassifier2.INPUT_H
     }
 }

@@ -10,12 +10,58 @@ import org.tensorflow.contrib.android.TensorFlowInferenceInterface
  * Created by prada on 07/04/2018.
  */
 
-class PlantFreezeClassifier2(mgr: AssetManager) {
+class PlantFreezeClassifier2(mgr: AssetManager) : Classifier {
 
-    private val tensorflow: TensorFlowInferenceInterface = TensorFlowInferenceInterface(mgr, "file:///android_asset/frozen_graph.pb")
+    private val tensorflow: TensorFlowInferenceInterface = TensorFlowInferenceInterface(mgr, "file:///android_asset/xbase/frozen_graph.pb")
     private val mPlantOutputs = FloatArray(OUTPUT_NUM)
+    private val labels = listOf(
+        "0:三色堇",
+        "1:久留米杜鵑",
+        "2:九重葛",
+        "3:五爪金龍",
+        "4:仙丹花",
+        "5:四季秋海棠",
+        "6:垂花懸鈴花",
+        "7:大花咸豐草",
+        "8:天竺葵",
+        "9:射干",
+        "10:平戶杜鵑",
+        "11:木棉",
+        "12:木茼蒿",
+        "13:杜鵑花仙子",
+        "14:烏來杜鵑",
+        "15:玫瑰",
+        "16:白晶菊",
+        "17:皋月杜鵑",
+        "18:矮牽牛",
+        "19:石竹",
+        "20:紫嬌花",
+        "21:羊蹄甲",
+        "22:美人蕉",
+        "23:艾氏香茶菜",
+        "24:萬壽菊",
+        "25:著生杜鵑",
+        "26:蔓花生",
+        "27:蛇苺",
+        "28:蛇莓",
+        "29:蜀葵",
+        "30:蟛蜞菊",
+        "31:通泉草",
+        "32:酢漿草",
+        "33:野菊花",
+        "34:金毛杜鵑",
+        "35:金盞花",
+        "36:金絲桃",
+        "37:金雞菊",
+        "38:金魚草",
+        "39:銀葉菊",
+        "40:鳳仙花",
+        "41:黃秋英",
+        "42:黃金菊",
+        "43:龍船花"
+    )
 
-    fun run(pixels: FloatArray): Int {
+    override fun recognize(pixels: FloatArray?): Classification {
         tensorflow.feed(INPUT_NAME, pixels, 1L, INPUT_W.toLong(), INPUT_H.toLong(), 3L)
         tensorflow.run(OUTPUT_NAMES)
         tensorflow.fetch(OUTPUT_NAMES[0], mPlantOutputs)
@@ -29,7 +75,7 @@ class PlantFreezeClassifier2(mgr: AssetManager) {
                 max = mPlantOutputs[i]
             }
         }
-        return idx
+        return Classification(max, labels[idx])
     }
 
     companion object {
@@ -45,20 +91,14 @@ class PlantFreezeClassifier2(mgr: AssetManager) {
         private val OUTPUT_NAMES = arrayOf("resnet_v2_50/predictions/Reshape_1:0")
         private val INPUT_NAME = "input:0"
 
-        private val buffer = IntArray(INPUT_W * INPUT_H)
         private val pixelBuffer = FloatArray(INPUT_W * INPUT_H * 3)
 
-        fun convertTo(bm: Bitmap): FloatArray {
-            bm.getPixels(buffer, 0, INPUT_W, 0, 0, INPUT_W, INPUT_H)
-            return convertTo(buffer)
-        }
-
-        fun convertTo(buff: IntArray): FloatArray {
-            if (buff.size != INPUT_W * INPUT_H) {
+        fun copyPixel(input: IntArray): FloatArray {
+            if (input.size != INPUT_W * INPUT_H) {
                 throw IllegalArgumentException("input buffer size isn't the same as the expected size for Tensorflow")
             }
-            for (i in 0 until buff.size) {
-                val pix = buff[i]
+            for (i in 0 until input.size) {
+                val pix = input[i]
                 pixelBuffer[3 * i] = (Color.red(pix) - R_MEAN).toFloat()
                 pixelBuffer[3 * i + 1] = (Color.green(pix) - G_MEAN).toFloat()
                 pixelBuffer[3 * i + 2] = (Color.blue(pix) - B_MEAN).toFloat()

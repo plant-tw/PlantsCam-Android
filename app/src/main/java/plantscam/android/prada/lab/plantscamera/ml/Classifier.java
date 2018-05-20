@@ -9,7 +9,5 @@ package plantscam.android.prada.lab.plantscamera.ml;
     //which given some drawn pixels as input
     //classifies what it sees as an MNIST image
 public interface Classifier {
-    String name();
-
     Classification recognize(final float[] pixels);
 }
