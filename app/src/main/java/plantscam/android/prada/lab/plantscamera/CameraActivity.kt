@@ -71,7 +71,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         disposeBag.add(cameraViewModel.render()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                // TODO display result
+                text_result.text = it.classification.label + " (" + it.classification.conf + ")"
             })
     }
 

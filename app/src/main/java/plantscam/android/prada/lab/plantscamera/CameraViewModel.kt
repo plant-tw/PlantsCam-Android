@@ -54,7 +54,7 @@ class CameraViewModel(private val assets: AssetManager) {
             })
             .subscribeOn(Schedulers.io())
             .subscribe {
-                renderSignal.onNext(CameraViewState(it.toString()))
+                renderSignal.onNext(CameraViewState(it))
             })
 
 //        disposeBag.add(takePhotoSignal
@@ -102,7 +102,7 @@ class CameraViewModel(private val assets: AssetManager) {
         return renderSignal
     }
 
-    data class CameraViewState(val toastMsg: String)
+    data class CameraViewState(val classification: Classification)
 
     data class SensorData(
         @SerializedName("x") val x : Float,
