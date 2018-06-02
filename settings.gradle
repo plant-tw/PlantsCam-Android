@@ -1,3 +1,2 @@
-include ':app', ':lib-cameraview', ':lib-util', ':lib-image-utils', ':cwac-camera'
-project(':lib-cameraview').projectDir = new File('cameraview/library')
+include ':app', ':lib-util', ':lib-image-utils', ':cwac-camera'
 project(':cwac-camera').projectDir = new File('cwac-camera/camera')
