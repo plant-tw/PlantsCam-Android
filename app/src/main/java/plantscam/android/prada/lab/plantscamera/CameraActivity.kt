@@ -5,6 +5,7 @@ import android.content.Context
 import android.hardware.Camera
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.MotionEvent
 import android.widget.Toast
 import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
@@ -16,6 +17,8 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.activity_camera.*
+import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class CameraActivity : AppCompatActivity(), CameraHostProvider {
@@ -46,6 +49,9 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
             val size = camera.parameters.previewSize
             data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, size.width, size.height)) }
 
+        }
+        camera.setOnTouchListener { _, event ->
+            setCameraFocus(event)
         }
         btn_take_photo.setOnClickListener {
             val rxPermissions = RxPermissions(this)
@@ -82,6 +88,18 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         disposeBag.clear()
     }
 
+    private fun setCameraFocus(event: MotionEvent) : Boolean {
+        myHost?.let { host ->
+            if (host.isFocusable())
+            try {
+                camera.setCameraFocus(event)
+                AnimUtils.showFocusRect(focus_rect, event)
+                return true
+            } catch (e: RuntimeException) { }
+        }
+        return false
+    }
+
     override fun getCameraHost(): CameraHost {
         if (myHost == null) {
             myHost = MyHost(this)
@@ -98,6 +116,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     // add more configuration later
     inner class MyHost(ctx: Context) : SimpleCameraHost(ctx) {
         var _cameraId : Int = -1
+        val isAutoFocusAvaliable = AtomicBoolean(false)
 
         override fun getCameraId(): Int {
             if (_cameraId == -1) {
@@ -134,6 +153,19 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
         override fun getRecordingHint(): CameraHost.RecordingHint {
             return CameraHost.RecordingHint.NONE
+        }
+
+
+        override fun autoFocusAvailable() {
+            isAutoFocusAvaliable.set(true)
+        }
+
+        override fun autoFocusUnavailable() {
+            isAutoFocusAvaliable.set(false)
+        }
+
+        fun isFocusable(): Boolean {
+            return isAutoFocusAvaliable.get()
         }
     }
 
