@@ -29,6 +29,12 @@ class CameraViewModel(private val assets: AssetManager) {
     private val croppedBitmap = Bitmap.createBitmap(TF_MODEL_INPUT_W, TF_MODEL_INPUT_H, Bitmap.Config.ARGB_8888)
     private val croppedCanvas = Canvas(croppedBitmap)
     private lateinit var frameToCropTransform : Matrix
+    var op1Times = 0f
+    var op2Times = 0f
+    var op3Times = 0f
+    var op4Times = 0f
+    var counter = 0
+
 
     fun bindIntents(cameraBuffSignal: Observable<CameraActivity.CameraPreviewData>,
                     cameraPreviewReady: Observable<android.hardware.Camera.Size>,
@@ -46,15 +52,35 @@ class CameraViewModel(private val assets: AssetManager) {
             cameraBuffSignal
                 .observeOn(Schedulers.io())
                 .filter { rgbBitmap != null }
-                .map { toRGB(it.previewData, it.width, it.height) }
-                .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
-                .map { PlantFreezeClassifier2.copyPixel(it) },
+                .map {
+                    val t1 = System.currentTimeMillis()
+                    val rgb = toRGB(it.previewData, it.width, it.height)
+                    op1Times += (System.currentTimeMillis() - t1)
+                    rgb
+                }
+                .map {
+                    val t1 = System.currentTimeMillis()
+                    val r = crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H)
+                    op2Times += (System.currentTimeMillis() - t1)
+                    r
+                }
+                .map {
+                    val t1 = System.currentTimeMillis()
+                    val r = PlantFreezeClassifier2.copyPixel(it)
+                    op3Times += (System.currentTimeMillis() - t1)
+                    r
+                },
             BiFunction<Classifier, FloatArray, Classification> { tf, data ->
-                 tf.recognize(data)
+                 val t1 = System.currentTimeMillis()
+                 val r =tf.recognize(data)
+                 op4Times += (System.currentTimeMillis() - t1)
+                r
             })
             .subscribeOn(Schedulers.io())
             .subscribe {
+                counter++
                 renderSignal.onNext(CameraViewState(it))
+                printProfilingLog()
             })
 
 //        disposeBag.add(takePhotoSignal
@@ -92,6 +118,22 @@ class CameraViewModel(private val assets: AssetManager) {
 //                Toast.makeText(baseContext, "Error!! " + error.message, Toast.LENGTH_LONG).show()
 //            }
 //        )
+    }
+
+    private fun printProfilingLog() {
+
+        val avg1 = op1Times / counter
+        val avg2 = op2Times / counter
+        val avg3 = op3Times / counter
+        val avg4 = op4Times / counter
+        val sb = StringBuilder()
+        sb.append("\n")
+        sb.append(">>>>> OP1 : toRGB\tAVG :" + avg1 + "ms\t\tFPS : " + (1000f / avg1)).append("\n")
+        sb.append(">>>>> OP2 : crop\tAVG :" + avg2 + "ms\t\tFPS : " + (1000f / avg2)).append("\n")
+        sb.append(">>>>> OP3 : copyPixel\tAVG :" + avg3 + "ms\t\tFPS : " + (1000f / avg3)).append("\n")
+        sb.append(">>>>> OP4 : recognize\tAVG : " + avg4 + "ms\t\tFPS : " + (1000f / avg4)).append("\n")
+        System.out.println(sb.toString())
+
     }
 
     fun unbindIntents() {

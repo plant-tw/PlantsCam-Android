@@ -69,7 +69,7 @@ class PlantFreezeClassifier2(mgr: AssetManager) : Classifier {
         var idx = 0
         var max = mPlantOutputs[0]
         for (i in 1 until mPlantOutputs.size) {
-            Log.d("TF DEMO", "output = " + mPlantOutputs[i])
+            // Log.d("TF DEMO", "output = " + mPlantOutputs[i])
             if (mPlantOutputs[i] > max) {
                 idx = i
                 max = mPlantOutputs[i]
