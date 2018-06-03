@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import com.cardinalblue.utils.YUVUtils
 import com.google.gson.annotations.SerializedName
+import io.reactivex.BackpressureStrategy
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
@@ -44,11 +45,13 @@ class CameraViewModel(private val assets: AssetManager) {
         disposeBag.add(Observable.combineLatest(
             initTensorflow(assets),
             cameraBuffSignal
+                .toFlowable(BackpressureStrategy.LATEST)
                 .observeOn(Schedulers.io())
                 .filter { rgbBitmap != null }
                 .map { toRGB(it.previewData, it.width, it.height) }
                 .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
-                .map { PlantFreezeClassifier2.copyPixel(it) },
+                .map { PlantFreezeClassifier2.copyPixel(it) }
+                .toObservable(),
             BiFunction<Classifier, FloatArray, Classification> { tf, data ->
                  tf.recognize(data)
             })
