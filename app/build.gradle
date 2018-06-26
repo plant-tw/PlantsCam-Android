@@ -39,9 +39,9 @@ dependencies {
 //    implementation 'androidx.core:core-ktx:0.2'
     implementation rootProject.ext.dep.firebaseCore
     implementation rootProject.ext.dep.supportAppcompatV7
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'org.tensorflow:tensorflow-lite:+'
-    implementation 'org.tensorflow:tensorflow-android:1.+'
+    implementation rootProject.ext.dep.firebaseMl
 
     implementation 'com.google.dagger:dagger:2.15'
     implementation 'com.google.dagger:dagger-android:2.14.1'
@@ -49,7 +49,6 @@ dependencies {
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.14.1'
     kapt 'com.google.dagger:dagger-compiler:2.15'
 
-    // implementation project(':lib-cameraview')
     implementation project(':cwac-camera')
     implementation project(':lib-util')
     implementation project(':lib-image-utils')

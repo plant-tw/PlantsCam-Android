@@ -14,8 +14,9 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import plantscam.android.prada.lab.plantscamera.ml.Classification
 import plantscam.android.prada.lab.plantscamera.ml.Classifier
-import plantscam.android.prada.lab.plantscamera.ml.PlantFreezeClassifier2
+import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
 import plantscam.android.prada.lab.plantscamera.utils.ImageUtils
+import java.nio.ByteBuffer
 
 /**
  * Created by prada on 30/04/2018.
@@ -50,9 +51,9 @@ class CameraViewModel(private val assets: AssetManager) {
                 .filter { rgbBitmap != null }
                 .map { toRGB(it.previewData, it.width, it.height) }
                 .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
-                .map { PlantFreezeClassifier2.copyPixel(it) }
+                .map { ImageMLKitClassifier.copyPixel(it) }
                 .toObservable(),
-            BiFunction<Classifier, FloatArray, Classification> { tf, data ->
+            BiFunction<Classifier, ByteBuffer, Classification> { tf, data ->
                  tf.recognize(data)
             })
             .subscribeOn(Schedulers.io())
@@ -118,7 +119,7 @@ class CameraViewModel(private val assets: AssetManager) {
 //                it.onNext(MnistClassifier.create(assets, "TensorFlow",
 //                        "mnist/opt_mnist_convnet-tf.pb", "mnist/labels.txt", MnistClassifier.PIXEL_WIDTH,
 //                        "input", "output", true))
-                it.onNext(PlantFreezeClassifier2(assets))
+                it.onNext(ImageMLKitClassifier())
             } catch (e: Throwable) {
                 it.onError(e)
             }
@@ -154,10 +155,7 @@ class CameraViewModel(private val assets: AssetManager) {
     }
 
     companion object {
-
-//        const val TF_MODEL_INPUT_W = MnistClassifier.PIXEL_WIDTH
-//        const val TF_MODEL_INPUT_H = MnistClassifier.PIXEL_WIDTH
-        const val TF_MODEL_INPUT_W = PlantFreezeClassifier2.INPUT_W
-        const val TF_MODEL_INPUT_H = PlantFreezeClassifier2.INPUT_H
+        const val TF_MODEL_INPUT_W = ImageMLKitClassifier.DIM_IMG_SIZE_X
+        const val TF_MODEL_INPUT_H = ImageMLKitClassifier.DIM_IMG_SIZE_Y
     }
 }
