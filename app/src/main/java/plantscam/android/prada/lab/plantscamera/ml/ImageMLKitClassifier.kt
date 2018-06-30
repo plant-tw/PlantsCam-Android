@@ -15,6 +15,7 @@ limitations under the License.
 
 package plantscam.android.prada.lab.plantscamera.ml
 
+import android.content.res.AssetManager
 import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.tasks.Tasks
@@ -23,6 +24,7 @@ import com.google.firebase.ml.custom.*
 import com.google.firebase.ml.custom.model.FirebaseCloudModelSource
 import com.google.firebase.ml.custom.model.FirebaseLocalModelSource
 import com.google.firebase.ml.custom.model.FirebaseModelDownloadConditions
+import com.piccollage.util.FileUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -30,7 +32,7 @@ import java.util.*
 /** Classifies images with Tensorflow Lite.  */
 class ImageMLKitClassifier
 @Throws(FirebaseMLException::class)
-internal constructor() : Classifier {
+internal constructor(val assetMgr: AssetManager) : Classifier {
 
     private val interpreter: FirebaseModelInterpreter?
     private val inputOutputOptions: FirebaseModelInputOutputOptions
@@ -38,7 +40,7 @@ internal constructor() : Classifier {
     /** An instance of the driver class to run model inference with Tensorflow Lite.  */
 
     /** Labels corresponding to the output of the vision model.  */
-    private val labelList: MutableList<String>
+    private val labelList: List<String>
 
     /** An array to hold inference results, to be feed into Tensorflow Lite as outputs.  */
     private var labelProbArray: Array<FloatArray>? = null
@@ -64,8 +66,8 @@ internal constructor() : Classifier {
         FirebaseModelManager.getInstance().registerLocalModelSource(localModelSource)
         FirebaseModelManager.getInstance().registerCloudModelSource(cloudSource)
         val options = FirebaseModelOptions.Builder()
-                .setCloudModelName("my_poets")
-                .setLocalModelName("asset")
+                .setCloudModelName("plant-mobilenet")
+                .setLocalModelName("assets")
                 .build()
         interpreter = FirebaseModelInterpreter.getInstance(options)
 
@@ -75,13 +77,14 @@ internal constructor() : Classifier {
         filterLabelProbArray = Array(FILTER_STAGES) { FloatArray(labelList.size) }
 
         inputOutputOptions = FirebaseModelInputOutputOptions.Builder()
-                .setInputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(DIM_BATCH_SIZE, DIM_IMG_SIZE_X, DIM_IMG_SIZE_Y, DIM_PIXEL_SIZE))
-                .setOutputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(1, labelList.size))
-                .build()
+            .setInputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(DIM_BATCH_SIZE, DIM_IMG_SIZE_X, DIM_IMG_SIZE_Y, DIM_PIXEL_SIZE))
+            .setOutputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(1, labelList.size))
+            .build()
     }
 
-    private fun loadLabels(s: String): MutableList<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun loadLabels(filename: String): List<String> {
+        val label = String(FileUtils.toBytes(assetMgr.open(filename)))
+        return label.split("\n")
     }
 
     override fun recognize(pixels: ByteBuffer): Classification {
@@ -98,8 +101,6 @@ internal constructor() : Classifier {
         result.result
 
         val endTime = SystemClock.uptimeMillis()
-        Log.d(TAG, "Timecost to run model inference: " + java.lang.Long.toString(endTime - startTime))
-
         // smooth the results
         applyFilter()
 
@@ -150,23 +151,27 @@ internal constructor() : Classifier {
     companion object {
 
         /** A ByteBuffer to hold image data, to be feed into Tensorflow Lite as inputs.  */
-        private var imgData: ByteBuffer? = null
+        private val imgData: ByteBuffer by lazy {
+            val data = ByteBuffer.allocateDirect(4 * DIM_BATCH_SIZE * DIM_IMG_SIZE_X * DIM_IMG_SIZE_Y * DIM_PIXEL_SIZE)
+            data.order(ByteOrder.nativeOrder())
+            data
+        }
 
         fun copyPixel(input: IntArray): ByteBuffer {
             if (input.size != DIM_IMG_SIZE_X * DIM_IMG_SIZE_Y) {
                 throw IllegalArgumentException("input buffer size isn't the same as the expected size for Tensorflow")
             }
-            if (imgData == null) {
-                imgData = ByteBuffer.allocateDirect(4 * DIM_BATCH_SIZE * DIM_IMG_SIZE_X * DIM_IMG_SIZE_Y * DIM_PIXEL_SIZE)
-                imgData!!.order(ByteOrder.nativeOrder())
+            imgData.rewind()
+            var k = 0
+            for (i in 0 until DIM_IMG_SIZE_X) {
+                for (j in 0 until DIM_IMG_SIZE_Y) {
+                    val pix = input[k++]
+                    imgData.putFloat(((pix shr 16 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
+                    imgData.putFloat(((pix shr 8 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
+                    imgData.putFloat(((pix and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
+                }
             }
-            for (i in 0 until input.size) {
-                val pix = input[i]
-                imgData!!.putFloat(((pix shr 16 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                imgData!!.putFloat(((pix shr 8 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                imgData!!.putFloat(((pix and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-            }
-            return imgData!!
+            return imgData
 
         }
 
@@ -184,8 +189,8 @@ internal constructor() : Classifier {
         const val DIM_IMG_SIZE_X = 224
         const val DIM_IMG_SIZE_Y = 224
 
-        private val IMAGE_MEAN = 128
-        private val IMAGE_STD = 128.0f
+        private val IMAGE_MEAN = 128f
+        private val IMAGE_STD = 128f
         private val FILTER_STAGES = 3
         private val FILTER_FACTOR = 0.4f
     }

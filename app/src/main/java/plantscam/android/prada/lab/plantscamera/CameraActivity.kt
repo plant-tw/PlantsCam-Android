@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
     private lateinit var cameraViewModel : CameraViewModel
-    val cameraBuffSignal: Subject<CameraPreviewData> = BehaviorSubject.create()
+    val cameraBuffSignal: PublishSubject<CameraPreviewData> = PublishSubject.create()
     val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
     val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
     private var myHost: MyHost? = null

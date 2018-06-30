@@ -7,7 +7,9 @@ import android.graphics.Matrix
 import com.cardinalblue.utils.YUVUtils
 import com.google.gson.annotations.SerializedName
 import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
@@ -43,16 +45,15 @@ class CameraViewModel(private val assets: AssetManager) {
                         TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
                         0, false)
             })
-        disposeBag.add(Observable.combineLatest(
-            initTensorflow(assets),
+        disposeBag.add(Flowable.combineLatest(
+            initTensorflow(assets).toFlowable(),
             cameraBuffSignal
-                .toFlowable(BackpressureStrategy.LATEST)
-                .observeOn(Schedulers.io())
+                .toFlowable(BackpressureStrategy.DROP)
+                .observeOn(Schedulers.io(), false, 1)
                 .filter { rgbBitmap != null }
                 .map { toRGB(it.previewData, it.width, it.height) }
                 .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
-                .map { ImageMLKitClassifier.copyPixel(it) }
-                .toObservable(),
+                .map { ImageMLKitClassifier.copyPixel(it) },
             BiFunction<Classifier, ByteBuffer, Classification> { tf, data ->
                  tf.recognize(data)
             })
@@ -113,13 +114,13 @@ class CameraViewModel(private val assets: AssetManager) {
         @SerializedName("y") val y : Float,
         @SerializedName("z") val z : Float)
 
-    private fun initTensorflow(assets: AssetManager): Observable<Classifier> {
-        return Observable.create {
+    private fun initTensorflow(assets: AssetManager): Single<Classifier> {
+        return Single.create {
             try {
-//                it.onNext(MnistClassifier.create(assets, "TensorFlow",
+//                it.onSuccess(MnistClassifier.create(assets, "TensorFlow",
 //                        "mnist/opt_mnist_convnet-tf.pb", "mnist/labels.txt", MnistClassifier.PIXEL_WIDTH,
 //                        "input", "output", true))
-                it.onNext(ImageMLKitClassifier())
+                it.onSuccess(ImageMLKitClassifier(assets))
             } catch (e: Throwable) {
                 it.onError(e)
             }
