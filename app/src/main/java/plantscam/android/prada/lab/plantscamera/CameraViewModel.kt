@@ -1,11 +1,9 @@
 package plantscam.android.prada.lab.plantscamera
 
-import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import com.cardinalblue.utils.YUVUtils
-import com.google.gson.annotations.SerializedName
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Observable
@@ -23,7 +21,8 @@ import java.nio.ByteBuffer
 /**
  * Created by prada on 30/04/2018.
  */
-class CameraViewModel(private val assets: AssetManager) {
+class CameraViewModel(var classifierStream : Single<Classifier>) {
+
     private val disposeBag = CompositeDisposable()
     private val renderSignal = BehaviorSubject.create<CameraViewState>()
     private var buff1: IntArray? = null
@@ -46,7 +45,7 @@ class CameraViewModel(private val assets: AssetManager) {
                         0, false)
             })
         disposeBag.add(Flowable.combineLatest(
-            initTensorflow(assets).toFlowable(),
+            classifierStream.toFlowable(),
             cameraBuffSignal
                 .toFlowable(BackpressureStrategy.DROP)
                 .observeOn(Schedulers.io(), false, 1)
@@ -108,24 +107,6 @@ class CameraViewModel(private val assets: AssetManager) {
     }
 
     data class CameraViewState(val classification: Classification)
-
-    data class SensorData(
-        @SerializedName("x") val x : Float,
-        @SerializedName("y") val y : Float,
-        @SerializedName("z") val z : Float)
-
-    private fun initTensorflow(assets: AssetManager): Single<Classifier> {
-        return Single.create {
-            try {
-//                it.onSuccess(MnistClassifier.create(assets, "TensorFlow",
-//                        "mnist/opt_mnist_convnet-tf.pb", "mnist/labels.txt", MnistClassifier.PIXEL_WIDTH,
-//                        "input", "output", true))
-                it.onSuccess(ImageMLKitClassifier(assets))
-            } catch (e: Throwable) {
-                it.onError(e)
-            }
-        }
-    }
 
     private fun toRGB(yuv: ByteArray, w1: Int, h1: Int): IntArray {
         val buff = getIntBuff(w1, h1)

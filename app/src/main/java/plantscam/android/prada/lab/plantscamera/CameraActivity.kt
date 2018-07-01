@@ -6,9 +6,12 @@ import android.hardware.Camera
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
+import com.commonsware.cwac.camera.CameraView
 import com.commonsware.cwac.camera.SimpleCameraHost
 import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -16,18 +19,29 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.activity_camera.*
+import plantscam.android.prada.lab.plantscamera.component.DaggerCameraComponent
+import plantscam.android.prada.lab.plantscamera.module.CameraModule
+import plantscam.android.prada.lab.plantscamera.module.MLModule
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
 
 class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
-    private lateinit var cameraViewModel : CameraViewModel
+    @Inject
+    lateinit var cameraViewModel : CameraViewModel
+
     val cameraBuffSignal: PublishSubject<CameraPreviewData> = PublishSubject.create()
     val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
     val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
     private var myHost: MyHost? = null
+
+    private val camera : CameraView by lazy { findViewById<CameraView>(R.id.camera) }
+    private val text_result : TextView by lazy { findViewById<TextView>(R.id.text_result) }
+    private val focus_rect : View by lazy { findViewById<View>(R.id.focus_rect) }
+
+
 
     private val disposeBag = CompositeDisposable()
 //    private val cameraCallback = object: CameraView.Callback() {
@@ -43,7 +57,9 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        cameraViewModel = CameraViewModel(assets)
+        DaggerCameraComponent.builder()
+            .appComponent((application as PlantsApplication).appComponent)
+            .build()
 
         camera.setPreviewCallback { data, camera ->
             val size = camera.parameters.previewSize
@@ -53,7 +69,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         camera.setOnTouchListener { _, event ->
             setCameraFocus(event)
         }
-        btn_take_photo.setOnClickListener {
+        findViewById<View>(R.id.btn_take_photo).setOnClickListener {
             val rxPermissions = RxPermissions(this)
             disposeBag.add(rxPermissions
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
