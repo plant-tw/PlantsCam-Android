@@ -14,12 +14,16 @@ import com.commonsware.cwac.camera.CameraHostProvider
 import com.commonsware.cwac.camera.CameraView
 import com.commonsware.cwac.camera.SimpleCameraHost
 import com.tbruyelle.rxpermissions2.RxPermissions
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import plantscam.android.prada.lab.plantscamera.component.DaggerCameraComponent
+import plantscam.android.prada.lab.plantscamera.ml.Classifier
+import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
 import plantscam.android.prada.lab.plantscamera.module.CameraModule
 import plantscam.android.prada.lab.plantscamera.module.MLModule
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
@@ -57,9 +61,13 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        DaggerCameraComponent.builder()
-            .appComponent((application as PlantsApplication).appComponent)
-            .build()
+        // FIXME
+//        DaggerCameraComponent.builder()
+//            .appComponent((application as PlantsApplication).appComponent)
+//            .build()
+        cameraViewModel = CameraViewModel(Single
+            .just(ImageMLKitClassifier(assetMgr = assets) as Classifier)
+            .subscribeOn(Schedulers.io()))
 
         camera.setPreviewCallback { data, camera ->
             val size = camera.parameters.previewSize
