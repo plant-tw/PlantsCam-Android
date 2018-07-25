@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 /**
  * Created by prada on 30/04/2018.
  */
-class CameraViewModel(var classifierStream : Single<Classifier>) {
+class CameraViewModel(private var classifierStream : Single<Classifier>) {
 
     private val disposeBag = CompositeDisposable()
     private val renderSignal = BehaviorSubject.create<CameraViewState>()
@@ -60,42 +60,6 @@ class CameraViewModel(var classifierStream : Single<Classifier>) {
             .subscribe {
                 renderSignal.onNext(CameraViewState(it))
             })
-
-//        disposeBag.add(takePhotoSignal
-//            .switchMap { data ->
-//                val s1 = Observable.just(data)
-//                    .map {
-//                        val uuid = UuidFactory(this@CameraActivity).deviceUuid.toString()
-//                        val file = File(externalCacheDir, uuid + ".jpg")
-//                        FileUtils.write(file, it)
-//                        file
-//                    }
-//                val s2 = ReactiveSensors(baseContext)
-//                    .observeSensor(Sensor.TYPE_GYROSCOPE)
-//                    .filter(ReactiveSensorFilter.filterSensorChanged())
-//                    .take(1)
-//                    .subscribeOn(Schedulers.computation())
-//                    .map {
-//                        val event = it.sensorEvent
-//                        val x = event.values[0]
-//                        val y = event.values[1]
-//                        val z = event.values[2]
-//                        SensorData(x, y, z)
-//                    }
-//                    .toObservable()
-//                Observable.zip(s1, s2, BiFunction<File, SensorData, File> { file, sensor ->
-//                    val exif = ExifInterface(file.toString())
-//                    exif.setAttribute(ExifInterface.TAG_USER_COMMENT, Gson().toJson(sensor).toString())
-//                    exif.saveAttributes()
-//                    file
-//                })
-//            }.subscribe { file ->
-//                Toast.makeText(baseContext, "Saved!!", Toast.LENGTH_LONG).show()
-//                System.out.println(">>>>> file : " + it.toString())
-//                // FIXME make sure the Stream is closed after this callback
-//                Toast.makeText(baseContext, "Error!! " + error.message, Toast.LENGTH_LONG).show()
-//            }
-//        )
     }
 
     fun unbindIntents() {

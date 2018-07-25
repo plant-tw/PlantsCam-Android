@@ -1,4 +1,4 @@
-package plantscam.android.prada.lab.plantscamera.module
+package plantscam.android.prada.lab.plantscamera.di.module
 
 import dagger.Module
 import dagger.Provides

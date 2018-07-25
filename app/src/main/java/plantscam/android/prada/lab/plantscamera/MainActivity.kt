@@ -15,33 +15,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         btn_start.setOnClickListener {
-            val rxPermissions = RxPermissions(this)
-            rxPermissions
+            RxPermissions(this)
                 .request(CAMERA)
-                .subscribe({ granted ->
+                .subscribe { granted ->
                     if (granted) {
                         startActivity(Intent(this, CameraActivity::class.java))
                     } else {
                         Toast.makeText(this, "permission denied!!", Toast.LENGTH_LONG).show()
                     }
-                })
-
-//             //  Test TensorFlow
-//            Observable.fromCallable {
-//                val bm = BitmapFactory.decodeStream(assets.open("data/3.jpg"))
-//                Bitmap.createScaledBitmap(bm,
-//                    PlantFreezeClassifier2.INPUT_W,
-//                    PlantFreezeClassifier2.INPUT_H, false)
-//            }
-//            .map { PlantFreezeClassifier2.convertTo(it) }
-//            // .map { classifier.run(it, fakeLenPixel, fakeLenCm) }
-//            .map { classifier.run(it) }
-//            .subscribeOn(Schedulers.computation())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe {
-//                Toast.makeText(this, "detected result = " + it, Toast.LENGTH_LONG).show()
-//            }
+                }
         }
     }
-
 }

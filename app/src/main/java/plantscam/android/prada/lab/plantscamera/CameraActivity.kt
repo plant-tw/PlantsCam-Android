@@ -6,12 +6,9 @@ import android.hardware.Camera
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
-import com.commonsware.cwac.camera.CameraView
 import com.commonsware.cwac.camera.SimpleCameraHost
 import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.Single
@@ -21,50 +18,36 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
+import kotlinx.android.synthetic.main.activity_camera.*
 import plantscam.android.prada.lab.plantscamera.component.DaggerCameraComponent
 import plantscam.android.prada.lab.plantscamera.ml.Classifier
 import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
-import plantscam.android.prada.lab.plantscamera.module.CameraModule
-import plantscam.android.prada.lab.plantscamera.module.MLModule
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-
 
 class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
     @Inject
     lateinit var cameraViewModel : CameraViewModel
 
-    val cameraBuffSignal: PublishSubject<CameraPreviewData> = PublishSubject.create()
-    val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
-    val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
-    private var myHost: MyHost? = null
-
-    private val camera : CameraView by lazy { findViewById<CameraView>(R.id.camera) }
-    private val text_result : TextView by lazy { findViewById<TextView>(R.id.text_result) }
-    private val focus_rect : View by lazy { findViewById<View>(R.id.focus_rect) }
-
-
+    private val cameraBuffSignal: PublishSubject<CameraPreviewData> = PublishSubject.create()
+    private val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
+    private val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
+    private val myHost: MyHost by lazy {
+        MyHost(this)
+    }
 
     private val disposeBag = CompositeDisposable()
-//    private val cameraCallback = object: CameraView.Callback() {
-//        override fun onPreviewFrame(cameraView: CameraView?, data: ByteArray?, width: Int, height: Int, format: Int) {
-//            data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, width, height)) }
-//        }
-//        override fun onPictureTaken(cameraView: CameraView?, jpegData: ByteArray?) {
-//            jpegData?.let { takePhotoSignal.onNext(it) }
-//        }
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
         // FIXME
-//        DaggerCameraComponent.builder()
-//            .appComponent((application as PlantsApplication).appComponent)
-//            .build()
+        DaggerCameraComponent.builder()
+            .appComponent((application as PlantsApplication).appComponent)
+            .build()
         cameraViewModel = CameraViewModel(Single
             .just(ImageMLKitClassifier(assetMgr = assets) as Classifier)
             .subscribeOn(Schedulers.io()))
@@ -77,17 +60,17 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         camera.setOnTouchListener { _, event ->
             setCameraFocus(event)
         }
-        findViewById<View>(R.id.btn_take_photo).setOnClickListener {
+        btn_take_photo.setOnClickListener {
             val rxPermissions = RxPermissions(this)
             disposeBag.add(rxPermissions
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .subscribe({ granted ->
+                .subscribe { granted ->
                     if (granted) {
                         camera.takePicture(false, true)
                     } else {
                         Toast.makeText(baseContext, "permission denied!!", Toast.LENGTH_LONG).show()
                     }
-                }))
+                })
         }
     }
 
@@ -113,11 +96,10 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     }
 
     private fun setCameraFocus(event: MotionEvent) : Boolean {
-        myHost?.let { host ->
-            if (host.isFocusable())
+        if (myHost.isFocusable()) {
             try {
                 camera.setCameraFocus(event)
-                AnimUtils.showFocusRect(focus_rect, event)
+                AnimUtils.showFocusRect(focus_rect, event.x, event.y)
                 return true
             } catch (e: RuntimeException) { }
         }
@@ -125,10 +107,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     }
 
     override fun getCameraHost(): CameraHost {
-        if (myHost == null) {
-            myHost = MyHost(this)
-        }
-        return myHost!!
+        return myHost
     }
 
     data class CameraPreviewData(
@@ -192,6 +171,4 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
             return isAutoFocusAvaliable.get()
         }
     }
-
-
 }

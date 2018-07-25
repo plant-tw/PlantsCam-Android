@@ -1,18 +1,3 @@
-/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-==============================================================================*/
-
 package plantscam.android.prada.lab.plantscamera.ml
 
 import android.content.res.AssetManager
@@ -29,7 +14,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-/** Classifies images with Tensorflow Lite.  */
 class ImageMLKitClassifier
 @Throws(FirebaseMLException::class)
 internal constructor(val assetMgr: AssetManager) : Classifier {
@@ -105,7 +89,7 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
         applyFilter()
 
         // print the results
-        var labels = printTopKLabels(1)
+        val labels = printTopKLabels(1)
         System.out.println((endTime - startTime).toString() + "ms")
         return labels[0]
     }
@@ -115,13 +99,14 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
 
         // Low pass filter `labelProbArray` into the first stage of the filter.
         for (j in 0 until numOfLabels) {
-            filterLabelProbArray!![0][j] += FILTER_FACTOR * (labelProbArray!![0][j] - filterLabelProbArray!![0][j])
+            filterLabelProbArray!![0][j] += FILTER_FACTOR *
+                (labelProbArray!![0][j] - filterLabelProbArray!![0][j])
         }
         // Low pass filter each stage into the next.
         for (i in 1 until FILTER_STAGES) {
             for (j in 0 until numOfLabels) {
-                filterLabelProbArray!![i][j] += FILTER_FACTOR * (filterLabelProbArray!![i - 1][j] - filterLabelProbArray!![i][j])
-
+                filterLabelProbArray!![i][j] += FILTER_FACTOR *
+                    (filterLabelProbArray!![i - 1][j] - filterLabelProbArray!![i][j])
             }
         }
 
@@ -176,22 +161,22 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
         }
 
         /** Tag for the [Log].  */
-        private val TAG = "TfLiteCameraDemo"
+        private const val TAG = "TfLiteCameraDemo"
 
         /** Number of results to show in the UI.  */
-        private val RESULTS_TO_SHOW = 3
+        private const val RESULTS_TO_SHOW = 3
 
         /** Dimensions of inputs.  */
-        private val DIM_BATCH_SIZE = 1
+        private const val DIM_BATCH_SIZE = 1
 
-        private val DIM_PIXEL_SIZE = 3
+        private const val DIM_PIXEL_SIZE = 3
 
         const val DIM_IMG_SIZE_X = 224
         const val DIM_IMG_SIZE_Y = 224
 
-        private val IMAGE_MEAN = 128f
-        private val IMAGE_STD = 128f
-        private val FILTER_STAGES = 3
-        private val FILTER_FACTOR = 0.4f
+        private const val IMAGE_MEAN = 128f
+        private const val IMAGE_STD = 128f
+        private const val FILTER_STAGES = 3
+        private const val FILTER_FACTOR = 0.4f
     }
 }

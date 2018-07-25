@@ -1,10 +1,10 @@
-package plantscam.android.prada.lab.plantscamera.component
+package plantscam.android.prada.lab.plantscamera.di.component
 
 import dagger.Component
 import plantscam.android.prada.lab.plantscamera.CameraActivity
 import plantscam.android.prada.lab.plantscamera.UserScope
-import plantscam.android.prada.lab.plantscamera.module.CameraModule
-import plantscam.android.prada.lab.plantscamera.module.MLModule
+import plantscam.android.prada.lab.plantscamera.di.module.CameraModule
+import plantscam.android.prada.lab.plantscamera.di.module.MLModule
 
 /**
  * Created by prada on 25/02/2018.

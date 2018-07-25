@@ -1,9 +1,7 @@
 package plantscam.android.prada.lab.plantscamera.utils
 
 import android.support.v4.view.ViewCompat
-import android.view.MotionEvent
 import android.view.View
-
 
 class AnimUtils {
     companion object {
@@ -46,35 +44,35 @@ class AnimUtils {
                 }.start()
         }
 
-        fun showFocusRect(v: View, event: MotionEvent) {
-            v.x = event.x
-            v.y = event.y
-            v.scaleX = 1.4f
-            v.scaleY = 1.4f
-            v.alpha = 1f
+        fun showFocusRect(focusView: View, x: Float, y: Float) {
+            focusView.x = x
+            focusView.y = y
+            focusView.scaleX = 1.4f
+            focusView.scaleY = 1.4f
+            focusView.alpha = 1f
 
-            v.visibility = View.VISIBLE
-            ViewCompat.animate(v)
+            focusView.visibility = View.VISIBLE
+            ViewCompat.animate(focusView)
                 .scaleX(1f)
                 .scaleY(1f)
                 .setDuration(200)
                 .withEndAction {
-                    ViewCompat.animate(v)
-                        .rotation(v.rotation + 120)
+                    ViewCompat.animate(focusView)
+                        .rotation(focusView.rotation + 120)
                         .scaleX(0.9f)
                         .scaleY(0.9f)
                         .setDuration(600)
                         .withEndAction {
-                            ViewCompat.animate(v)
-                                .rotation(v.rotation - 120)
+                            ViewCompat.animate(focusView)
+                                .rotation(focusView.rotation - 120)
                                 .scaleX(1f)
                                 .scaleY(1f)
                                 .setDuration(600)
                                 .withEndAction {
-                                    ViewCompat.animate(v)
+                                    ViewCompat.animate(focusView)
                                         .alpha(0f)
                                         .setDuration(200)
-                                        .withEndAction { v.visibility = View.INVISIBLE }
+                                        .withEndAction { focusView.visibility = View.INVISIBLE }
                                 }
                         }
                 }

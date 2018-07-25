@@ -1,11 +1,8 @@
-package plantscam.android.prada.lab.plantscamera.module
+package plantscam.android.prada.lab.plantscamera.di.module
 
 import android.content.res.AssetManager
-import android.util.Log
 
 import com.google.firebase.ml.common.FirebaseMLException
-
-import javax.inject.Singleton
 
 import dagger.Module
 import dagger.Provides
@@ -23,6 +20,5 @@ class MLModule {
         } catch (e: FirebaseMLException) {
             Single.error(e)
         }
-
     }
 }
