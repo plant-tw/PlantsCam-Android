@@ -3,11 +3,11 @@ package plantscam.android.prada.lab.plantscamera
 import android.app.Application
 
 import plantscam.android.prada.lab.plantscamera.di.component.AppComponent
-import plantscam.android.prada.lab.plantscamera.component.DaggerAppComponent
 import plantscam.android.prada.lab.plantscamera.di.module.AppModule
 
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
+import plantscam.android.prada.lab.plantscamera.di.component.DaggerAppComponent
 
 /**
  * Created by prada on 24/02/2018.

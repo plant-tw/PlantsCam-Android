@@ -19,7 +19,7 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.activity_camera.*
-import plantscam.android.prada.lab.plantscamera.component.DaggerCameraComponent
+import plantscam.android.prada.lab.plantscamera.di.component.DaggerCameraComponent
 import plantscam.android.prada.lab.plantscamera.ml.Classifier
 import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
