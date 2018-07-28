@@ -44,13 +44,10 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        // FIXME
         DaggerCameraComponent.builder()
             .appComponent((application as PlantsApplication).appComponent)
             .build()
-        cameraViewModel = CameraViewModel(Single
-            .just(ImageMLKitClassifier(assetMgr = assets) as Classifier)
-            .subscribeOn(Schedulers.io()))
+            .inject(this)
 
         camera.setPreviewCallback { data, camera ->
             val size = camera.parameters.previewSize
