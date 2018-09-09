@@ -3,12 +3,14 @@ package plantscam.android.prada.lab.plantscamera
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
+import android.hardware.Camera
 import com.cardinalblue.utils.YUVUtils
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
@@ -23,8 +25,9 @@ import java.nio.ByteBuffer
  */
 class CameraViewModel(private var classifierStream : Single<Classifier>) {
 
-    private val disposeBag = CompositeDisposable()
-    private val renderSignal = BehaviorSubject.create<CameraViewState>()
+    private val classifierResultUiEvent = BehaviorSubject.create<Classification>()
+    private val pickerUiEvent = BehaviorSubject.createDefault<Boolean>(false)
+
     private var buff1: IntArray? = null
     private var buff2: IntArray? = null
 
@@ -34,19 +37,80 @@ class CameraViewModel(private var classifierStream : Single<Classifier>) {
     private lateinit var frameToCropTransform : Matrix
 
     fun bindIntents(cameraBuffSignal: Observable<CameraActivity.CameraPreviewData>,
-                    cameraPreviewReady: Observable<android.hardware.Camera.Size>,
-                    takePhotoSignal: Observable<ByteArray?>) {
+                    cameraPreviewReady: Observable<Camera.Size>,
+                    takePhotoSignal: Observable<ByteArray?>,
+                    btnDetailPageSwtichEvent: Observable<Any>) : Disposable {
+        val disposeBag = CompositeDisposable()
         disposeBag.add(cameraPreviewReady
             .subscribe {
                 rgbBitmap = Bitmap.createBitmap(it.width, it.height, Bitmap.Config.ARGB_8888)
                 frameToCropTransform = ImageUtils.getTransformationMatrix(
-                        it.width, it.height,
-                        TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
-                        0, false)
+                    it.width, it.height,
+                    TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
+                    0, false)
             })
-        disposeBag.add(Flowable.combineLatest(
+
+        // the use case here is too simple, so it don't need the reducer function for now
+        disposeBag.add(detectPlantIntent(classifierStream, cameraBuffSignal)
+            .subscribeOn(Schedulers.io())
+            .subscribe { classifierResultUiEvent.onNext(it) })
+
+        disposeBag.add(changePickerIntent(btnDetailPageSwtichEvent)
+            .subscribe { pickerUiEvent.onNext(it) })
+
+        /**
+            // ideal version
+            view(
+                model1(
+                    intent1(event1),
+                    intent2(event2, event3)
+                ),
+                model2(
+                    intent3(event1),
+                    intent4(event4)
+                )
+            )
+
+            // sample code
+
+            // layer 1 : event/input -> action/intents
+            val intents = Observable.merge(
+                intent1(event1),
+                intent2(event2, event3),
+                intentN(event4, parameter))
+
+            // layer 2 : action/intents -> UI state
+            val uiStates = intents.
+                scan(initState, {
+                    // reduce state
+                })
+
+            val disposable = uiStates
+                .subscribeOn(...)
+                .subscribe(uiSignal)
+         */
+        return disposeBag
+    }
+
+    fun classifierUiEvent(): Observable<Classification> {
+        return classifierResultUiEvent
+    }
+
+    fun pickerUiEvent(): Observable<Boolean> {
+        return pickerUiEvent
+    }
+
+    private fun changePickerIntent(event: Observable<Any>): Observable<Boolean> {
+        return event.scan(false) { prev, _ -> !prev }
+    }
+
+    private fun detectPlantIntent(classifierStream: Single<Classifier>,
+                                  cameraBuffSignal: Observable<CameraActivity.CameraPreviewData>): Flowable<Classification> {
+        return Flowable.combineLatest(
             classifierStream.toFlowable(),
             cameraBuffSignal
+                // disable the camera stream if the picker is opened
+                .filter { !pickerUiEvent.value }
                 .toFlowable(BackpressureStrategy.DROP)
                 .observeOn(Schedulers.io(), false, 1)
                 .filter { rgbBitmap != null }
@@ -54,23 +118,9 @@ class CameraViewModel(private var classifierStream : Single<Classifier>) {
                 .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
                 .map { ImageMLKitClassifier.copyPixel(it) },
             BiFunction<Classifier, ByteBuffer, Classification> { tf, data ->
-                 tf.recognize(data)
-            })
-            .subscribeOn(Schedulers.io())
-            .subscribe {
-                renderSignal.onNext(CameraViewState(it))
+                tf.recognize(data)
             })
     }
-
-    fun unbindIntents() {
-        disposeBag.clear()
-    }
-
-    fun render(): Observable<CameraViewState> {
-        return renderSignal
-    }
-
-    data class CameraViewState(val classification: Classification)
 
     private fun toRGB(yuv: ByteArray, w1: Int, h1: Int): IntArray {
         val buff = getIntBuff(w1, h1)

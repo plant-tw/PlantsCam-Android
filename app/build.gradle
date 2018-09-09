@@ -39,6 +39,7 @@ dependencies {
 //    implementation 'androidx.core:core-ktx:0.2'
     implementation rootProject.ext.dep.firebaseCore
     implementation rootProject.ext.dep.supportAppcompatV7
+    implementation rootProject.ext.dep.supportTransition
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'org.tensorflow:tensorflow-lite:+'
     implementation rootProject.ext.dep.firebaseMl
@@ -54,6 +55,7 @@ dependencies {
     implementation project(':lib-image-utils')
 
     implementation rootProject.ext.dep.rxJava
+    implementation rootProject.ext.dep.rxBindingCompat
     implementation rootProject.ext.dep.rxAndroid
     implementation rootProject.ext.dep.rxPermissions
     implementation 'com.github.pwittchen:reactivesensors-rx2:0.2.0'

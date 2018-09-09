@@ -1,6 +1,5 @@
 package plantscam.android.prada.lab.plantscamera.ml
 
-import android.content.res.AssetManager
 import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.tasks.Tasks
@@ -9,17 +8,18 @@ import com.google.firebase.ml.custom.*
 import com.google.firebase.ml.custom.model.FirebaseCloudModelSource
 import com.google.firebase.ml.custom.model.FirebaseLocalModelSource
 import com.google.firebase.ml.custom.model.FirebaseModelDownloadConditions
-import com.piccollage.util.FileUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
 class ImageMLKitClassifier
 @Throws(FirebaseMLException::class)
-internal constructor(val assetMgr: AssetManager) : Classifier {
+internal constructor(fileLoader: (String) -> String) : Classifier {
 
     private val interpreter: FirebaseModelInterpreter?
     private val inputOutputOptions: FirebaseModelInputOutputOptions
+
+    private val EMPTY_CLASSIFICATION = Classification(label = "")
 
     /** An instance of the driver class to run model inference with Tensorflow Lite.  */
 
@@ -55,7 +55,8 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
                 .build()
         interpreter = FirebaseModelInterpreter.getInstance(options)
 
-        labelList = loadLabels("labels.txt")
+        val label = fileLoader("labels.txt")
+        labelList = label.split("\n")
 
         labelProbArray = Array(1) { FloatArray(labelList.size) }
         filterLabelProbArray = Array(FILTER_STAGES) { FloatArray(labelList.size) }
@@ -66,11 +67,6 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
             .build()
     }
 
-    private fun loadLabels(filename: String): List<String> {
-        val label = String(FileUtils.toBytes(assetMgr.open(filename)))
-        return label.split("\n")
-    }
-
     override fun recognize(pixels: ByteBuffer): Classification {
         // Here's where the magic happens!!!
         val startTime = SystemClock.uptimeMillis()
@@ -78,7 +74,11 @@ internal constructor(val assetMgr: AssetManager) : Classifier {
         val result = interpreter!!.run(inputs, inputOutputOptions)
             .addOnFailureListener { e -> e.printStackTrace() }
             .addOnSuccessListener { firebaseModelOutputs -> Log.d(TAG, "firebaseModelOutputs = $firebaseModelOutputs") }
-        Tasks.await(result)
+        try {
+            Tasks.await(result)
+        } catch (e : InterruptedException) {
+            return EMPTY_CLASSIFICATION
+        }
 
         val output = result.result.getOutput<Array<FloatArray>>(0)
         labelProbArray = output

@@ -1,33 +1,33 @@
 package plantscam.android.prada.lab.plantscamera
 
-import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Camera
+import android.os.Build
 import android.os.Bundle
+import android.support.constraint.ConstraintSet
+import android.support.transition.TransitionManager
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
-import android.widget.Toast
+import android.webkit.WebView
 import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
 import com.commonsware.cwac.camera.SimpleCameraHost
-import com.tbruyelle.rxpermissions2.RxPermissions
-import io.reactivex.Single
+import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.activity_camera.*
 import plantscam.android.prada.lab.plantscamera.di.component.DaggerCameraComponent
-import plantscam.android.prada.lab.plantscamera.ml.Classifier
-import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
+    private val javaScriptLoadImages = "doc.loadImages();"
     @Inject
     lateinit var cameraViewModel : CameraViewModel
 
@@ -40,6 +40,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
 
     private val disposeBag = CompositeDisposable()
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
@@ -52,43 +53,89 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         camera.setPreviewCallback { data, camera ->
             val size = camera.parameters.previewSize
             data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, size.width, size.height)) }
-
         }
         camera.setOnTouchListener { _, event ->
             setCameraFocus(event)
         }
-        btn_take_photo.setOnClickListener {
-            val rxPermissions = RxPermissions(this)
-            disposeBag.add(rxPermissions
-                .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .subscribe { granted ->
-                    if (granted) {
-                        camera.takePicture(false, true)
-                    } else {
-                        Toast.makeText(baseContext, "permission denied!!", Toast.LENGTH_LONG).show()
-                    }
-                })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true)
         }
+
+        webview.loadUrl("https://plant-tw.github.io/PlantsData/")
+        webview.settings.javaScriptEnabled = true
     }
 
     override fun onResume() {
         super.onResume()
-        camera.onResume()
-        camera.restartPreview()
+        cameraViewEnable(true)
 
-        cameraViewModel.bindIntents(cameraBuffSignal, cameraPreviewReadySignal, takePhotoSignal)
+        disposeBag.add(cameraViewModel.bindIntents(
+            cameraBuffSignal,
+            cameraPreviewReadySignal,
+            takePhotoSignal,
+            RxView.clicks(btn_detail_page)))
 
-        disposeBag.add(cameraViewModel.render()
+        disposeBag.add(cameraViewModel.pickerUiEvent()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { isCollapsed ->
+                changeDetailPage(isCollapsed)
+                refreshWebViewImage()
+                // FIXME it might has the performance issue, I will like to solve it in ViewModel layer
+//                val enable = !isCollapsed
+//                cameraViewEnable(enable)
+            })
+
+        disposeBag.add(cameraViewModel.classifierUiEvent()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                text_result.text = it.classification.label + " (" + it.classification.conf + ")"
+                updateWebView(it.label)
+                refreshWebViewImage()
             })
     }
 
+    private fun cameraViewEnable(enable: Boolean) {
+        if (enable) {
+            camera.onResume()
+            camera.restartPreview()
+        } else {
+            camera.onPause()
+        }
+    }
+
+    private fun changeDetailPage(isCollapsed: Boolean) {
+        TransitionManager.beginDelayedTransition(root_constraint_layout)
+        val set = ConstraintSet()
+        set.clone(root_constraint_layout)
+        if (isCollapsed) {
+            set.setGuidelinePercent(R.id.guide_top_of_picker, 0.2f)
+        } else {
+            set.setGuidelinePercent(R.id.guide_top_of_picker, 0.8f)
+        }
+        set.applyTo(root_constraint_layout)
+    }
+
+    private fun refreshWebViewImage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webview.evaluateJavascript(javaScriptLoadImages) {
+                // do nothing
+            }
+        } else {
+            webview.loadUrl("javascript:$javaScriptLoadImages")
+        }
+    }
+
+    private fun updateWebView(plant: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webview.evaluateJavascript("doc.show(\"$plant\");", null)
+        } else {
+            webview.loadUrl("javascript:doc.show(\"$plant\");")
+            webview.loadUrl("javascript:$javaScriptLoadImages")
+        }
+    }
+
     override fun onPause() {
-        camera.onPause()
+        cameraViewEnable(false)
         super.onPause()
-        cameraViewModel.unbindIntents()
         disposeBag.clear()
     }
 
