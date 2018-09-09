@@ -35,7 +35,7 @@ kapt {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation rootProject.ext.dep.kotlinStdlibJdk7
 //    implementation 'androidx.core:core-ktx:0.2'
     implementation rootProject.ext.dep.firebaseCore
     implementation rootProject.ext.dep.supportAppcompatV7
