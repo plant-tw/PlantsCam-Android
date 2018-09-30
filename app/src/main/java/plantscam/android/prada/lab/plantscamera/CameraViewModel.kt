@@ -20,6 +20,8 @@ import plantscam.android.prada.lab.plantscamera.ml.ImageMLKitClassifier
 import plantscam.android.prada.lab.plantscamera.utils.ImageUtils
 import java.nio.ByteBuffer
 
+
+
 /**
  * Created by prada on 30/04/2018.
  */
@@ -36,19 +38,9 @@ class CameraViewModel(private var classifierStream : Single<Classifier>) {
     private val croppedCanvas = Canvas(croppedBitmap)
     private lateinit var frameToCropTransform : Matrix
 
-    fun bindIntents(cameraBuffSignal: Observable<CameraActivity.CameraPreviewData>,
-                    cameraPreviewReady: Observable<Camera.Size>,
-                    takePhotoSignal: Observable<ByteArray?>,
+    fun bindIntents(cameraBuffSignal: Observable<Bitmap>,
                     btnDetailPageSwtichEvent: Observable<Any>) : Disposable {
         val disposeBag = CompositeDisposable()
-        disposeBag.add(cameraPreviewReady
-            .subscribe {
-                rgbBitmap = Bitmap.createBitmap(it.width, it.height, Bitmap.Config.ARGB_8888)
-                frameToCropTransform = ImageUtils.getTransformationMatrix(
-                    it.width, it.height,
-                    TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
-                    0, false)
-            })
 
         // the use case here is too simple, so it don't need the reducer function for now
         disposeBag.add(detectPlantIntent(classifierStream, cameraBuffSignal)
@@ -105,7 +97,7 @@ class CameraViewModel(private var classifierStream : Single<Classifier>) {
     }
 
     private fun detectPlantIntent(classifierStream: Single<Classifier>,
-                                  cameraBuffSignal: Observable<CameraActivity.CameraPreviewData>): Flowable<Classification> {
+                                  cameraBuffSignal: Observable<Bitmap>): Flowable<Classification> {
         return Flowable.combineLatest(
             classifierStream.toFlowable(),
             cameraBuffSignal
@@ -113,13 +105,29 @@ class CameraViewModel(private var classifierStream : Single<Classifier>) {
                 .filter { !pickerUiEvent.value }
                 .toFlowable(BackpressureStrategy.DROP)
                 .observeOn(Schedulers.io(), false, 1)
-                .filter { rgbBitmap != null }
-                .map { toRGB(it.previewData, it.width, it.height) }
+                .map {
+                    rgbBitmap = Bitmap.createBitmap(it.width, it.height, Bitmap.Config.ARGB_8888)
+                    frameToCropTransform = ImageUtils.getTransformationMatrix(
+                            it.width, it.height,
+                            TF_MODEL_INPUT_W, TF_MODEL_INPUT_H,
+                            0, false)
+
+                    toIntArray(it)
+                }
                 .map { crop(it, TF_MODEL_INPUT_W, TF_MODEL_INPUT_H) }
                 .map { ImageMLKitClassifier.copyPixel(it) },
             BiFunction<Classifier, ByteBuffer, Classification> { tf, data ->
                 tf.recognize(data)
             })
+    }
+
+    // Testing
+    private fun toIntArray(bitmap: Bitmap): IntArray {
+        val x = bitmap.width
+        val y = bitmap.height
+        val intArray = IntArray(x * y)
+        bitmap.getPixels(intArray, 0, x, 0, 0, x, y)
+        return intArray
     }
 
     private fun toRGB(yuv: ByteArray, w1: Int, h1: Int): IntArray {

@@ -2,6 +2,7 @@ package plantscam.android.prada.lab.plantscamera
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.hardware.Camera
 import android.os.Build
 import android.os.Bundle
@@ -16,6 +17,7 @@ import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
 import com.commonsware.cwac.camera.SimpleCameraHost
 import com.jakewharton.rxbinding2.view.RxView
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
@@ -24,10 +26,11 @@ import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.activity_camera.*
 import plantscam.android.prada.lab.plantscamera.di.component.DaggerCameraComponent
 import plantscam.android.prada.lab.plantscamera.utils.AnimUtils
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-class CameraActivity : AppCompatActivity(), CameraHostProvider {
+class CameraActivity : AppCompatActivity() {
 
     private val javaScriptLoadImages = "doc.loadImages();"
     @Inject
@@ -36,9 +39,6 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     private val cameraBuffSignal: PublishSubject<CameraPreviewData> = PublishSubject.create()
     private val cameraPreviewReadySignal: Subject<Camera.Size> = BehaviorSubject.create()
     private val takePhotoSignal: Subject<ByteArray> = PublishSubject.create()
-    private val myHost: MyHost by lazy {
-        MyHost(this)
-    }
 
     private val disposeBag = CompositeDisposable()
 
@@ -52,13 +52,6 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
             .build()
             .inject(this)
 
-        camera.setPreviewCallback { data, camera ->
-            val size = camera.parameters.previewSize
-            data?.let { cameraBuffSignal.onNext(CameraPreviewData(it, size.width, size.height)) }
-        }
-        camera.setOnTouchListener { _, event ->
-            setCameraFocus(event)
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
@@ -70,11 +63,10 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     override fun onResume() {
         super.onResume()
         cameraViewEnable(true)
-
         disposeBag.add(cameraViewModel.bindIntents(
-            cameraBuffSignal,
-            cameraPreviewReadySignal,
-            takePhotoSignal,
+            Observable.just(BitmapFactory.decodeResource(getResources(), R.drawable.test))
+                    .delay(1, TimeUnit.SECONDS)
+                    .repeat(10),
             RxView.clicks(btn_detail_page)))
 
         disposeBag.add(cameraViewModel.pickerUiEvent()
@@ -96,12 +88,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     }
 
     private fun cameraViewEnable(enable: Boolean) {
-        if (enable) {
-            camera.onResume()
-            camera.restartPreview()
-        } else {
-            camera.onPause()
-        }
+
     }
 
     private fun changeDetailPage(isCollapsed: Boolean) {
@@ -150,80 +137,9 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         disposeBag.clear()
     }
 
-    private fun setCameraFocus(event: MotionEvent) : Boolean {
-        if (myHost.isFocusable()) {
-            try {
-                camera.setCameraFocus(event)
-                AnimUtils.showFocusRect(focus_rect, event.x, event.y)
-                return true
-            } catch (e: RuntimeException) { }
-        }
-        return false
-    }
-
-    override fun getCameraHost(): CameraHost {
-        return myHost
-    }
-
     data class CameraPreviewData(
         val previewData: ByteArray,
         val width: Int,
         val height: Int
     )
-
-    // add more configuration later
-    inner class MyHost(ctx: Context) : SimpleCameraHost(ctx) {
-        var _cameraId : Int = -1
-        val isAutoFocusAvaliable = AtomicBoolean(false)
-
-        override fun getCameraId(): Int {
-            if (_cameraId == -1) {
-                initCameraId()
-            }
-            return _cameraId
-        }
-
-        override fun getPreviewSize(displayOrientation: Int,
-                                    width: Int,
-                                    height: Int,
-                                    parameters: Camera.Parameters): Camera.Size? {
-            previewSize = getOptimalPreviewSize(parameters.supportedPreviewSizes, width / 2, height / 2)
-            cameraPreviewReadySignal.onNext(previewSize)
-            return previewSize
-        }
-
-        private fun initCameraId() {
-            val count = Camera.getNumberOfCameras()
-            var result = -1
-            if (count > 0) {
-                result = 0 // if we have a camera, default to this one
-                val info = Camera.CameraInfo()
-                for (i in 0 until count) {
-                    Camera.getCameraInfo(i, info)
-                    if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                        result = i
-                        break
-                    }
-                }
-            }
-            _cameraId = result
-        }
-
-        override fun getRecordingHint(): CameraHost.RecordingHint {
-            return CameraHost.RecordingHint.NONE
-        }
-
-
-        override fun autoFocusAvailable() {
-            isAutoFocusAvaliable.set(true)
-        }
-
-        override fun autoFocusUnavailable() {
-            isAutoFocusAvaliable.set(false)
-        }
-
-        fun isFocusable(): Boolean {
-            return isAutoFocusAvaliable.get()
-        }
-    }
 }
