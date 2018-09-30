@@ -12,10 +12,19 @@ android {
         applicationId "prada.lab.android.plantscamera"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "0.0.4"
+        versionCode 10
+        versionName "0.1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        release {
+            keyAlias 'plantcam'
+            storeFile new File('/Users/prada/Dropbox/plant_cam_891x3.key')
+            storePassword '888999111'
+            keyPassword '888999111'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -59,6 +68,8 @@ dependencies {
     implementation rootProject.ext.dep.rxAndroid
     implementation rootProject.ext.dep.rxPermissions
     implementation 'com.github.pwittchen:reactivesensors-rx2:0.2.0'
+
+    implementation 'com.blankj:utilcode:1.20.4'
 
     // JSON
     implementation rootProject.ext.dep.gson

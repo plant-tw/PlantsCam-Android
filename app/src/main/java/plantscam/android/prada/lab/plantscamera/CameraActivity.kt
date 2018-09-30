@@ -9,7 +9,9 @@ import android.support.constraint.ConstraintSet
 import android.support.transition.TransitionManager
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
+import android.view.View
 import android.webkit.WebView
+import com.blankj.utilcode.util.NetworkUtils
 import com.commonsware.cwac.camera.CameraHost
 import com.commonsware.cwac.camera.CameraHostProvider
 import com.commonsware.cwac.camera.SimpleCameraHost
@@ -88,7 +90,7 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         disposeBag.add(cameraViewModel.classifierUiEvent()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                updateWebView(it.label)
+                updateDescription(it.label)
                 refreshWebViewImage()
             })
     }
@@ -124,12 +126,21 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
         }
     }
 
-    private fun updateWebView(plant: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            webview.evaluateJavascript("doc.show(\"$plant\");", null)
+    private fun updateDescription(plant: String) {
+        if (NetworkUtils.isConnected()) {
+            detail_page_offline.visibility = View.INVISIBLE
+            detail_page.visibility = View.VISIBLE
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                webview.evaluateJavascript("doc.show(\"$plant\");", null)
+            } else {
+                webview.loadUrl("javascript:doc.show(\"$plant\");")
+                webview.loadUrl("javascript:$javaScriptLoadImages")
+            }
         } else {
-            webview.loadUrl("javascript:doc.show(\"$plant\");")
-            webview.loadUrl("javascript:$javaScriptLoadImages")
+            detail_page_offline.visibility = View.VISIBLE
+            detail_page.visibility = View.INVISIBLE
+            detail_title.text = plant
         }
     }
 

@@ -9,7 +9,7 @@ buildscript {
         maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.0-beta05'
+        classpath 'com.android.tools.build:gradle:3.2.0'
         // Kotlin plugin.
         classpath rootProject.ext.dep.kotlinGradle
         classpath 'com.google.gms:google-services:4.0.0'
