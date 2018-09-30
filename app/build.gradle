@@ -60,6 +60,8 @@ dependencies {
     implementation rootProject.ext.dep.rxPermissions
     implementation 'com.github.pwittchen:reactivesensors-rx2:0.2.0'
 
+    implementation 'com.blankj:utilcode:1.20.4'
+
     // JSON
     implementation rootProject.ext.dep.gson
 
