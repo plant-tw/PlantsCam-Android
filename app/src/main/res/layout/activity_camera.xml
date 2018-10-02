@@ -57,6 +57,7 @@
             android:id="@+id/btn_detail_page"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
             app:srcCompat="@drawable/ic_arrow_up_black_24dp"
             android:layout_gravity="right" />
     </FrameLayout>
