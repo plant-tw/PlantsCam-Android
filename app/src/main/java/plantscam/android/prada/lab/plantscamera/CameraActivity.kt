@@ -10,6 +10,7 @@ import android.support.transition.TransitionManager
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import android.webkit.WebView
 import com.blankj.utilcode.util.NetworkUtils
 import com.commonsware.cwac.camera.CameraHost
@@ -45,7 +46,15 @@ class CameraActivity : AppCompatActivity(), CameraHostProvider {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Full screen
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
         setContentView(R.layout.activity_camera)
+
+        supportActionBar?.hide()
 
         DaggerCameraComponent.builder()
             .appComponent((application as PlantsApplication).appComponent)
